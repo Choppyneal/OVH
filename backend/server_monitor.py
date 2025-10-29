@@ -201,12 +201,18 @@ class ServerMonitor:
         change_type = None
         
         # 首次检查（old_status为None）且服务器可用
+        # 默认启用首次检查通知
         if old_status is None and status != "unavailable":
-            if subscription.get("notifyAvailable", True):
+            notify_first_check = subscription.get("notifyFirstCheck", True)  # 默认通知首次检查
+            if notify_first_check and subscription.get("notifyAvailable", True):
                 status_changed = True
                 change_type = "available"
                 config_desc = f" [{config_info['display']}]" if config_info else ""
                 self.add_log("INFO", f"首次检查发现 {plan_code}@{dc}{config_desc} 有货", "monitor")
+            else:
+                # 记录首次检查结果但不发送通知
+                config_desc = f" [{config_info['display']}]" if config_info else ""
+                self.add_log("INFO", f"首次检查发现 {plan_code}@{dc}{config_desc} 有货（已禁用首次检查通知）", "monitor")
         
         # 从无货变有货
         elif old_status == "unavailable" and status != "unavailable":
@@ -319,8 +325,13 @@ class ServerMonitor:
                     
                     if price_text:
                         message += f"\n💰 价格: {price_text}\n"
+                    else:
+                        # 如果价格获取失败，记录警告但继续发送通知
+                        self.add_log("WARNING", f"价格获取失败或超时，通知中不包含价格信息", "monitor")
                 except Exception as e:
                     self.add_log("WARNING", f"价格获取过程异常: {str(e)}，发送不带价格的通知", "monitor")
+                    import traceback
+                    self.add_log("WARNING", f"价格获取异常详情: {traceback.format_exc()}", "monitor")
                 
                 message += (
                     f"状态: {status}\n"
@@ -375,14 +386,6 @@ class ServerMonitor:
             str: 价格信息文本，如果获取失败返回None
         """
         try:
-            # 直接导入并使用内部价格获取函数（避免HTTP调用和认证问题）
-            try:
-                from app import _get_server_price_internal
-            except ImportError:
-                # 如果无法导入（可能是循环导入），跳过价格获取
-                self.add_log("WARNING", f"无法导入价格获取函数，跳过价格显示", "monitor")
-                return None
-            
             # 提取配置选项
             options = []
             
@@ -391,8 +394,26 @@ class ServerMonitor:
                 if 'options' in config_info and config_info['options']:
                     options = config_info['options']
             
-            # 直接调用内部函数
-            result = _get_server_price_internal(plan_code, datacenter, options)
+            # 使用HTTP请求调用内部价格API（确保在正确的上下文访问配置）
+            import requests
+            
+            self.add_log("DEBUG", f"开始获取价格: plan_code={plan_code}, datacenter={datacenter}, options={options}", "monitor")
+            
+            # 调用内部API端点
+            api_url = "http://127.0.0.1:19998/api/internal/monitor/price"
+            payload = {
+                "plan_code": plan_code,
+                "datacenter": datacenter,
+                "options": options
+            }
+            
+            try:
+                response = requests.post(api_url, json=payload, timeout=30)
+                response.raise_for_status()
+                result = response.json()
+            except requests.exceptions.RequestException as e:
+                self.add_log("WARNING", f"价格API请求失败: {str(e)}", "monitor")
+                return None
             
             if result.get("success") and result.get("price"):
                 price_info = result["price"]
@@ -403,12 +424,21 @@ class ServerMonitor:
                 if with_tax is not None:
                     # 格式化价格
                     currency_symbol = "€" if currency == "EUR" else "$" if currency == "USD" else currency
-                    return f"{currency_symbol}{with_tax:.2f}/月"
+                    price_text = f"{currency_symbol}{with_tax:.2f}/月"
+                    self.add_log("DEBUG", f"价格获取成功: {price_text}", "monitor")
+                    return price_text
+                else:
+                    self.add_log("WARNING", f"价格获取成功但withTax为None: result={result}", "monitor")
+            else:
+                error_msg = result.get("error", "未知错误")
+                self.add_log("WARNING", f"价格获取失败: {error_msg}", "monitor")
             
             return None
                 
         except Exception as e:
             self.add_log("WARNING", f"获取价格信息时出错: {str(e)}", "monitor")
+            import traceback
+            self.add_log("WARNING", f"价格获取异常堆栈: {traceback.format_exc()}", "monitor")
             return None
     
     def check_new_servers(self, current_server_list):

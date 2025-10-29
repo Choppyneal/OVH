@@ -395,6 +395,7 @@ def get_api_base_url():
 
 # Initialize OVH client
 def get_ovh_client():
+    global config
     if not config["appKey"] or not config["appSecret"] or not config["consumerKey"]:
         add_log("ERROR", "Missing OVH API credentials")
         return None
@@ -2665,6 +2666,8 @@ def _get_server_price_internal(plan_code, datacenter='gra', options=None):
             "error": str or None
         }
     """
+    global config
+    
     if options is None:
         options = []
     
@@ -2971,6 +2974,38 @@ def get_server_price(plan_code):
     else:
         status_code = 401 if "未配置OVH API密钥" in result.get("error", "") else 500
         return jsonify(result), status_code
+
+@app.route('/api/internal/monitor/price', methods=['POST'])
+def get_monitor_price():
+    """
+    内部API：用于订阅监控器获取价格（不需要API密钥验证）
+    这个端点只接受来自本地进程的调用
+    """
+    try:
+        # 安全检查：确保请求来自本地
+        client_ip = request.remote_addr
+        if client_ip not in ['127.0.0.1', '::1', 'localhost']:
+            add_log("WARNING", f"[monitor price API] 拒绝非本地请求: {client_ip}", "price")
+            return jsonify({"success": False, "error": "此API仅限本地访问"}), 403
+        
+        data = request.json or {}
+        plan_code = data.get('plan_code')
+        datacenter = data.get('datacenter', 'gra')
+        options = data.get('options', [])
+        
+        if not plan_code:
+            return jsonify({"success": False, "error": "缺少 plan_code 参数"}), 400
+        
+        # 调用内部函数获取价格
+        result = _get_server_price_internal(plan_code, datacenter, options)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        add_log("ERROR", f"[monitor price API] 获取价格异常: {str(e)}", "price")
+        import traceback
+        add_log("ERROR", f"[monitor price API] 异常详情: {traceback.format_exc()}", "price")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():

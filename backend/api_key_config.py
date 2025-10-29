@@ -19,8 +19,9 @@ API_SECRET_KEY = os.getenv('API_SECRET_KEY', 'ovh-phantom-sniper-2024-secret-key
 ENABLE_API_KEY_AUTH = os.getenv('ENABLE_API_KEY_AUTH', 'True').lower() == 'true'
 
 # 白名单路径（不需要验证的路径）
-# 例如健康检查、静态文件等
+# 例如健康检查、静态文件、内部API等
 WHITELIST_PATHS = [
     '/health',
     '/api/health',
+    '/api/internal/monitor/price',  # 内部监控价格API，不需要API密钥验证
 ]
