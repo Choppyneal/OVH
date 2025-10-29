@@ -78,9 +78,7 @@ export const API_URL = (() => {
   
   // 3. localhost开发模式
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    if (port === '5173') {
-      return 'http://localhost:5000/api';
-    }
+    return 'http://localhost:19998/api';
   }
   
   // 4. 生产环境：同源访问（Nginx代理）

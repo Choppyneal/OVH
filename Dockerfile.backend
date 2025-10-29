@@ -11,8 +11,9 @@ COPY backend/*.py .
 
 RUN mkdir -p data cache logs
 
-EXPOSE 5000
+EXPOSE 19998
 
 ENV PYTHONUNBUFFERED=1
+ENV PORT=19998
 
 CMD ["python", "app.py"]

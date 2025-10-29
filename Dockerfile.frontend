@@ -12,6 +12,6 @@ COPY tsconfig*.json ./
 COPY tailwind.config.ts postcss.config.js ./
 COPY components.json eslint.config.js ./
 
-EXPOSE 8080
+EXPOSE 19999
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "19999"]

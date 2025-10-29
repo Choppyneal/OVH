@@ -1490,7 +1490,7 @@ const ServersPage = () => {
     <div className="space-y-6 w-full" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
       <div className="mb-2">
         <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-1 cyber-glow-text`}>服务器列表</h1>
-        <p className="text-cyber-muted text-xs sm:text-sm">浏览可用服务器与实时可用性检测</p>
+        <p className="text-cyber-muted text-xs sm:text-sm">浏览可用服务器与实时可用性检测 · <span className="text-cyber-accent">首次配置，请点击刷新按钮获取服务器列表</span></p>
       </div>
       
       {/* 添加全局样式 */}

@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: ovh-backend
     expose:
-      - "5000"
+      - "19998"
     volumes:
       - ./backend/.env:/app/backend/.env
       - ./backend/data:/app/backend/data
@@ -35,7 +35,7 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: ovh-frontend
     expose:
-      - "8080"
+      - "19999"
     environment:
       - VITE_API_URL=/api
     restart: unless-stopped
