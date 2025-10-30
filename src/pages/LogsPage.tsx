@@ -121,7 +121,7 @@ const LogsPage = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0 max-w-full overflow-x-hidden">
       <div>
         <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-1 cyber-glow-text`}>详细日志</h1>
         <p className="text-cyber-muted text-sm mb-4 sm:mb-6">查看系统运行日志记录</p>
@@ -204,7 +204,7 @@ const LogsPage = () => {
       </div>
 
       {/* Logs display */}
-      <div className="cyber-panel overflow-hidden">
+      <div className="cyber-panel overflow-hidden max-w-full">
         <div className="flex justify-between items-center px-2 sm:px-3 py-2 border-b border-cyber-grid/30 bg-cyber-grid/5">
           <h2 className="font-semibold text-xs sm:text-sm">系统日志</h2>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -237,7 +237,7 @@ const LogsPage = () => {
             <p className="text-cyber-muted">没有日志记录</p>
           </div>
         ) : (
-          <div className="max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-250px)] overflow-y-auto overflow-x-hidden">
+          <div className="max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-250px)] overflow-y-auto overflow-x-hidden overscroll-contain">
             {/* 桌面端表格头部 */}
             {!isMobile && filteredLogs.length > 0 && (
               <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-cyber-grid/30 px-3 sm:px-4 py-2.5">
