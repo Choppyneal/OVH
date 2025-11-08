@@ -1699,6 +1699,12 @@ const ServersPage = () => {
     );
   };
 
+  const DATACENTER_REGIONS = {
+    '欧洲': ['gra', 'sbg', 'rbx', 'waw', 'fra', 'lon'],
+    '北美': ['bhs', 'hil', 'vin'],
+    '亚太': ['sgp', 'syd', 'mum'],
+  };
+
   return (
     <div className="space-y-6 w-full" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
       <div className="mb-2">
@@ -2075,91 +2081,78 @@ const ServersPage = () => {
                       </div>
                     </div>
                     
-                    {/* 数据中心列表 - 紧凑网格设计 */}
+                    {/* 数据中心列表 - 按区域分组 */}
                     <div className="bg-slate-900/10 p-3 sm:p-4">
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5">
-                        {OVH_DATACENTERS
+                      {Object.entries(DATACENTER_REGIONS).map(([region, dcCodes]) => {
+                        const regionDatacenters = OVH_DATACENTERS
+                          .filter(dc => dcCodes.includes(dc.code))
                           .filter(dc => {
                             const planCodeLower = server.planCode.toLowerCase();
                             if (planCodeLower.includes('-sgp')) return dc.code === 'sgp';
                             if (planCodeLower.includes('-syd')) return dc.code === 'syd';
                             if (planCodeLower.includes('-mum')) return dc.code === 'mum';
                             return true;
-                          })
-                          .map(dc => {
-                              const dcCode = dc.code.toUpperCase();
-                              const availStatus = availability[server.planCode]?.[dcCode.toLowerCase()] || "unknown";
-                              const isSelected = selectedDatacenters[server.planCode]?.[dcCode];
-                              
-                          let statusText = "查询中";
-                          let statusColor = "rgb(250, 204, 21)";
-                          let borderColor = "border-yellow-500/30";
-                          let bgColor = "bg-yellow-500/5";
-                              
-                              if (availStatus === "unavailable") {
-                            statusText = "不可用";
-                            statusColor = "rgb(239, 68, 68)";
-                            borderColor = "border-red-500/30";
-                            bgColor = "bg-red-500/5";
-                              } else if (availStatus && availStatus !== "unknown") {
-                            statusText = availStatus.includes("H") ? availStatus : "可用";
-                            statusColor = "rgb(74, 222, 128)";
-                            borderColor = "border-green-500/30";
-                            bgColor = "bg-green-500/5";
-                              }
-                              
-                              return (
-                                <div 
-                                  key={dcCode}
-                              className={`dc-item group relative rounded-md cursor-pointer transition-all duration-200 border ${
-                                isSelected 
-                                  ? 'border-cyber-accent bg-cyber-accent/10 shadow-sm' 
-                                  : 'border-slate-700/50 bg-slate-800/40 hover:border-slate-600 hover:bg-slate-800/60'
-                              }`}
-                                  onClick={(e) => toggleDatacenterSelection(server.planCode, dcCode, e)}
-                              title={`${dc.name} (${dc.region}) - ${statusText}`}
-                            >
-                              <div className="p-2 flex flex-col items-center text-center gap-1 relative">
-                                {/* 机房代码 */}
-                                <div className={`text-base font-bold tracking-wide ${
-                                  isSelected ? 'text-cyber-accent' : 'text-slate-200'
-                                }`}>
-                                  {dcCode}
-                                </div>
-                                
-                                {/* 机房名称 */}
-                                <div className={`text-[9px] truncate w-full ${
-                                  isSelected ? 'text-slate-300' : 'text-slate-400'
-                                }`}>
-                                  {dc.name}
-                                </div>
-                                
-                                {/* 状态指示器 */}
-                                <div className="flex items-center gap-1 mt-0.5">
-                                  <span 
-                                    className={`w-1.5 h-1.5 rounded-full ${
-                                      availStatus === "unavailable" ? 'animate-none' : 'animate-pulse'
-                                    }`}
-                                    style={{ backgroundColor: statusColor }}
-                                  ></span>
-                                  <span className="text-[8px]" style={{ color: statusColor }}>
-                                    {availStatus === "unknown" ? "..." : statusText}
-                                  </span>
-                                </div>
-                              </div>
+                          });
+
+                        if (regionDatacenters.length === 0) return null;
+
+                        return (
+                          <div key={region} className="mb-3 last:mb-0">
+                            <h3 className="text-xs font-bold text-cyber-accent/80 mb-2 tracking-wider pl-1">{region}</h3>
+                            <div className="flex flex-col gap-1.5">
+                              {regionDatacenters.map(dc => {
+                                  const dcCode = dc.code.toUpperCase();
+                                  const availStatus = availability[server.planCode]?.[dcCode.toLowerCase()] || "unknown";
+                                  const isSelected = selectedDatacenters[server.planCode]?.[dcCode];
                                   
-                              {/* 选中标记 */}
-                              {isSelected && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-cyber-accent flex items-center justify-center shadow-lg shadow-cyber-accent/50">
-                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="rgb(15, 23, 42)" strokeWidth="3.5">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                              );
-                            })}
+                                  let statusText = "查询中";
+                                  let statusColor = "text-yellow-400";
+                                  let statusBgColor = "bg-yellow-400";
+                                  
+                                  if (availStatus === "unavailable") {
+                                    statusText = "不可用";
+                                    statusColor = "text-red-400";
+                                    statusBgColor = "bg-red-400";
+                                  } else if (availStatus && availStatus !== "unknown") {
+                                    statusText = availStatus.includes("H") ? availStatus : "可用";
+                                    statusColor = "text-green-400";
+                                    statusBgColor = "bg-green-400";
+                                  }
+                                  
+                                  return (
+                                    <div 
+                                      key={dcCode}
+                                      className={`dc-bar group relative rounded-md cursor-pointer transition-all duration-200 border p-2 flex items-center justify-between ${
+                                        isSelected 
+                                          ? 'border-cyber-accent bg-cyber-accent/10 shadow-sm' 
+                                          : 'border-slate-700/50 bg-slate-800/40 hover:border-slate-600 hover:bg-slate-800/60'
+                                      }`}
+                                      onClick={(e) => toggleDatacenterSelection(server.planCode, dcCode, e)}
+                                      title={`${dc.name} (${dc.region}) - ${statusText}`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div>
+                                          <span className={`font-bold tracking-wide ${ isSelected ? 'text-cyber-accent' : 'text-slate-200' }`}>
+                                            {dcCode}
+                                          </span>
+                                          <span className="text-xs text-slate-400 ml-1.5 hidden sm:inline">{dc.name}</span>
+                                        </div>
+                                      </div>
+                                      <div className={`flex items-center gap-1.5 text-xs font-medium ${statusColor}`}>
+                                        <span 
+                                          className={`w-2 h-2 rounded-full ${ statusBgColor } ${ availStatus === "unavailable" || availStatus === "unknown" ? '' : 'animate-pulse' }`}
+                                        ></span>
+                                        <span>
+                                          {statusText}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                           </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </CardContent>
@@ -2187,7 +2180,7 @@ const ServersPage = () => {
                           {server.planCode}
                         </div>
                         {subscribedServers.has(server.planCode) && (
-                          <span className="relative inline-flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 hover:-translate-y-0.5 transition-all duration-200 flex-shrink-0" title="已订阅监控">
+                          <span className="relative flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 hover:-translate-y-0.5 transition-all duration-200 flex-shrink-0" title="已订阅监控">
                             <Bell size={12} className="text-white" />
                           </span>
                         )}
@@ -2434,42 +2427,54 @@ const ServersPage = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {OVH_DATACENTERS
+                    {Object.entries(DATACENTER_REGIONS).map(([region, dcCodes]) => {
+                      const regionDatacenters = OVH_DATACENTERS
+                        .filter(dc => dcCodes.includes(dc.code))
                         .filter(dc => {
                           const planCodeLower = server.planCode.toLowerCase();
                           if (planCodeLower.includes('-sgp')) return dc.code === 'sgp';
                           if (planCodeLower.includes('-syd')) return dc.code === 'syd';
                           if (planCodeLower.includes('-mum')) return dc.code === 'mum';
                           return true;
-                        })
-                        .map(dc => {
-                          const dcCode = dc.code.toUpperCase();
-                          const availStatus = availability[server.planCode]?.[dcCode.toLowerCase()] || "unknown";
-                          const isSelected = selectedDatacenters[server.planCode]?.[dcCode];
-                          
-                          return (
-                            <div
-                              key={dcCode}
-                              onClick={() => toggleDatacenterSelection(server.planCode, dcCode)}
-                              className={`px-2 py-1.5 rounded cursor-pointer text-xs flex items-center justify-between transition-all ${
-                                isSelected
-                                  ? 'bg-cyber-accent/20 border-cyber-accent text-cyber-accent'
-                                  : 'bg-slate-800/60 border-slate-700 hover:bg-slate-700/60 text-slate-300 hover:border-slate-600'
-                              } border font-medium`}
-                            >
-                              <span>{dcCode}</span>
-                              {availStatus !== "unknown" && (
-                                <span className={`text-xs font-semibold ${
-                                  availStatus === "unavailable" ? 'text-red-400' : 'text-green-400'
-                                }`}>
-                                  {availStatus === "unavailable" ? '无' : '有'}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                    </div>
+                        });
+
+                      if (regionDatacenters.length === 0) return null;
+
+                      return (
+                        <div key={region} className="mb-3 last:mb-0">
+                          <h3 className="text-xs font-semibold text-cyber-accent/80 mb-2 tracking-wider pl-1">{region}</h3>
+                          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
+                            {regionDatacenters.map(dc => {
+                              const dcCode = dc.code.toUpperCase();
+                              const availStatus = availability[server.planCode]?.[dcCode.toLowerCase()] || "unknown";
+                              const isSelected = selectedDatacenters[server.planCode]?.[dcCode];
+                              
+                              return (
+                                <div
+                                  key={dcCode}
+                                  onClick={() => toggleDatacenterSelection(server.planCode, dcCode)}
+                                  className={`px-2 py-1.5 rounded cursor-pointer text-xs flex items-center justify-between transition-all ${
+                                    isSelected
+                                      ? 'bg-cyber-accent/20 border-cyber-accent text-cyber-accent'
+                                      : 'bg-slate-800/60 border-slate-700 hover:bg-slate-700/60 text-slate-300 hover:border-slate-600'
+                                  } border font-medium`}
+                                  title={`${dc.name} (${dc.region})`}
+                                >
+                                  <span>{dcCode}</span>
+                                  {availStatus !== "unknown" && (
+                                    <span className={`text-xs font-semibold ${
+                                      availStatus === "unavailable" ? 'text-red-400' : 'text-green-400'
+                                    }`}>
+                                      {availStatus === "unavailable" ? '无' : '有'}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
