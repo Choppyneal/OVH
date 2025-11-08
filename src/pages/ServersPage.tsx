@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Cpu, Database, Wifi, HardDrive, CheckSquare, Square, Settings, ArrowRightLeft, Clock, Bell, Grid, List, Euro, DollarSign, Loader2, Server, MapPin } from "lucide-react";
+import { Cpu, Database, Wifi, HardDrive, CheckSquare, Square, Settings, ArrowRightLeft, Clock, Bell, Grid, List, Euro, DollarSign, Loader2, Server, MapPin, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiEvents } from "@/context/APIContext";
 import { OVH_DATACENTERS, DatacenterInfo } from "@/config/ovhConstants"; // Import from new location
@@ -2101,7 +2101,7 @@ const ServersPage = () => {
 
                         return (
                           <div key={region} className="mb-6 last:mb-0">
-                            <h3 className="text-sm font-semibold text-blue-500 mb-3.5 tracking-wide">{region}</h3>
+                            <h3 className="text-sm font-semibold text-blue-500 mb-3.5 tracking-wide drop-shadow-[0_0_1px_rgba(59,130,246,0.5)]">{region}</h3>
                             <div className="grid grid-cols-2 gap-3.5 w-full">
                               {regionDatacenters.map(dc => {
                                   const dcCode = dc.code.toUpperCase();
@@ -2136,38 +2136,36 @@ const ServersPage = () => {
                                     <button
                                       key={dcCode}
                                       type="button"
-                                      className={`w-full px-3.5 py-2.5 rounded-lg transition-all flex flex-col items-start min-w-0 ${
-                                        isSelected 
-                                          ? 'bg-cyber-accent/25 border-2 border-cyber-accent shadow-lg shadow-cyber-accent/20' 
-                                          : 'bg-cyber-grid/50 border border-cyber-accent/30 hover:bg-cyber-accent/10 hover:border-cyber-accent/50'
-                                      }`}
+                                      className="w-full px-3.5 py-2.5 rounded-lg transition-all duration-200 flex flex-col items-start min-w-0 bg-cyber-grid/50 border border-cyber-accent/30 hover:bg-cyber-accent/8 hover:border-cyber-accent/45"
                                       onClick={(e) => toggleDatacenterSelection(server.planCode, dcCode, e)}
                                       title={`${dc.name} (${dc.region})${statusText ? ` - ${statusText}` : ''}`}
                                     >
-                                      {/* 第一行：代码（左，粗体白色） + 状态点（右，小圆点） */}
-                                      <div className="flex items-center justify-between w-full mb-1.5">
-                                        <span className={`text-xs font-bold tracking-wide leading-none ${
-                                          isSelected ? 'text-cyber-accent' : 'text-white'
-                                        }`}>{dcCode}</span>
-                                        <span className={`w-[6px] h-[6px] rounded-full ${statusBgColor} flex-shrink-0`}></span>
+                                      {/* 第一行：代码（左，粗体白色） + 状态点/打勾（右，固定宽度防止布局变化） */}
+                                      <div className="flex items-center justify-between w-full mb-[7px]">
+                                        <span className="text-xs font-bold tracking-wide leading-none text-white transition-colors duration-200">{dcCode}</span>
+                                        <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                                          {isSelected ? (
+                                            <Check className="w-4 h-4 text-green-400" strokeWidth={3} />
+                                          ) : (
+                                            <span className={`w-[6px] h-[6px] rounded-full ${statusBgColor} transition-all duration-200`}></span>
+                                          )}
+                                        </div>
                                       </div>
                                       
                                       {/* 第二行：图标（左，白色轮廓） + 中文名称（右，白色文字） */}
-                                      <div className="flex items-center gap-1.5 w-full min-w-0 mb-1">
+                                      <div className="flex items-center gap-1.5 w-full min-w-0 mb-[5px]">
                                         <MapPin 
-                                          className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-cyber-accent' : 'text-white'}`}
+                                          className="w-3.5 h-3.5 flex-shrink-0 text-white/95 transition-colors duration-200"
                                           strokeWidth={2}
                                           fill="none"
                                         />
-                                        <span className={`text-[10px] leading-[1.35] flex-1 break-words font-normal ${
-                                          isSelected ? 'text-cyber-accent/90' : 'text-white'
-                                        }`}>{dc.name}</span>
+                                        <span className="text-[10px] leading-[1.35] flex-1 break-words font-normal text-white/90 transition-colors duration-200">{dc.name}</span>
                                       </div>
                                       
                                       {/* 第三行：状态文字（固定高度14px，左对齐，防止布局抖动） */}
                                       <div className="w-full h-[14px] flex items-center">
                                         {showStatusText ? (
-                                          <span className={`text-[10px] font-semibold leading-none ${statusTextColor} tracking-tight`}>{statusText}</span>
+                                          <span className={`text-[10px] font-semibold leading-none ${statusTextColor} tracking-tight transition-colors duration-200`}>{statusText}</span>
                                         ) : null}
                                       </div>
                                     </button>
